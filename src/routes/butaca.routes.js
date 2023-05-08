@@ -3,6 +3,7 @@ import { Router } from "express";
 import {
   addButacaBalcon,
   addButacaPlatea,
+  listButacas,
   saleButaca,
   solds,
   collected,
@@ -11,11 +12,13 @@ import {
 
 const router = Router();
 
-router.post("/create/balcon", addButacaBalcon);
-router.post("/create/platea", addButacaPlatea);
-router.post("/sale:type", saleButaca);
-router.get("/soldes", solds);
-router.get("/collect", collected);
-router.get("/apport", apported);
+router
+  .post("/create/balcon", addButacaBalcon)
+  .post("/create/platea", addButacaPlatea)
+  .get("/list/butacas", listButacas)
+  .post("/sale", saleButaca)
+  .get("/soldes", solds)
+  .get("/collect", collected)
+  .get("/apport", apported);
 
 export default router;

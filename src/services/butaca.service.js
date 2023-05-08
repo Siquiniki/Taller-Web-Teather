@@ -22,20 +22,33 @@ export const createButacaPlatea = async (idButaca, sold, protocol) => {
   }
 };
 
-export const saleButacaBalcon = async (idButaca, numBalcon) => {
+export const getButacas = async () => {
   try {
-    let price = numBalcon * 0.5;
-    const butaca = await ButacaModel.findByPk(idButaca);
-    const balcon = await BalconModel.findByPk(idButaca);
+    const butacas = await ButacaModel.findAll();
+    return butacas;
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+}
 
-    if (butaca.idButaca == balcon.idButaca) {
-      if (balcon.smokers) {
-        price += 5;
-        butaca.sold = true;
+export const saleButacaBalcon = async (idButaca) => {
+  try {
+    const butaca = await ButacaModel.findByPk(idButaca);
+    butaca.update({sold: true}, {
+      where: {
+        idButaca
+      }
+    });
+    const balcon = await BalconModel.findOne({where:{idButaca}});
+    let price = parseInt(idButaca.substring(1)) * 0.5;
+
+    if (butaca.idButaca === balcon.idButaca) {
+      if (balcon.smokers) {  
+        return price += 5;
+      } else{
         return price;
       }
     }
-    return price;
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -43,18 +56,22 @@ export const saleButacaBalcon = async (idButaca, numBalcon) => {
 
 export const saleButacaPlatea = async (idButaca) => {
   try {
-    let price = 20;
     const butaca = await ButacaModel.findByPk(idButaca);
-    const platea = await PlateaModel.findByPk(idButaca);
+    butaca.update({sold: true}, {
+      where: {
+        idButaca
+      }
+    });
 
-    if (butaca.idButaca == platea.idButaca) {
+    const platea = await PlateaModel.findOne({where: {idButaca}});
+
+    if (butaca.idButaca === platea.idButaca) {
       if (platea.protocol) {
-        price = 30;
-        butaca.sold = true;
-        return price;
+        return 30;
+      }else{
+        return 20;
       }
     }
-    return price;
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -78,7 +95,8 @@ export const lotButacasSolds = async () => {
 
 export const collectMoney = async () => {
   try {
-    let collect = collectMoneyBalcons + collectMoneyPlateas;
+    let collect = await collectMoneyBalcons() + await collectMoneyPlateas();
+    console.log(collect);
     return collect;
   } catch (error) {
     return res.status(500).json({ message: error.message });
@@ -90,13 +108,14 @@ const collectMoneyBalcons = async () => {
     let money = 0;
     await BalconModel.findAll().then((balcon) => {
       balcon.forEach((balcon) => {
-        money += parseInt(balcon.idButaca.subString(1)) * 0.5;
+        money += parseInt(balcon.idButaca.substring(1)) * 0.5;
         if (balcon.smokers) {
           money += 5;
         }
       });
-      return money;
     });
+    console.log(`Dinero recaudado de los balcones ${money}.`);
+    return money;
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -113,8 +132,9 @@ const collectMoneyPlateas = async () => {
           money += 20;
         }
       });
-      return money;
     });
+    console.log(`Dinero recaudado de las plateas ${money}.`);
+    return money;
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -126,7 +146,7 @@ export const apportSmokers = async () => {
     await BalconModel.findAll().then((balcon) => {
       balcon.forEach((balcon) => {
         if (balcon.smokers) {
-          money += parseInt(balcon.idButaca.subString(1)) * 0.5 + 5;
+          money += (parseInt(balcon.idButaca.substring(1)) * 0.5) + 5;
         }
       });
     });
